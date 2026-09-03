@@ -1,7 +1,7 @@
 ---
 name: prime-codebase
-description: Build a local context pack for an existing codebase — a Graphify AST code graph plus a written codebase map — so planning skills (/spec, /plan-eng-review) start grounded instead of guessing. Use when opening an unfamiliar repo, before planning a feature, or when the existing map has gone stale.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep
+description: "Build a local, gitignored context pack for an existing repo — a Graphify code graph plus a written codebase map — and set up the repo's Current work pointer, so planning skills start grounded."
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
 # Prime a codebase
@@ -11,9 +11,11 @@ Produces two local, gitignored artifacts in the current repo:
 - `graphify-out/` — a deterministic AST call graph, queryable
 - `.claude/codebase-map.md` — a written orientation doc
 
-Later sessions pick both up automatically because the user's personal
-`~/.claude/CLAUDE.md` carries a standing rule to look for them (step 7).
-Nothing is ever written into the repo's tracked files.
+And one tracked change, only with the user's answers in hand: a `## Current work`
+block in the repo's own `CLAUDE.md` (step 8).
+
+Later sessions pick the generated artifacts up automatically because the user's
+personal `~/.claude/CLAUDE.md` carries a standing rule to look for them (step 7).
 
 ## Trigger
 
@@ -157,23 +159,67 @@ behind HEAD, say so rather than trusting it.
 This single block is what makes the context reach `/spec` and
 `/plan-eng-review` — they read CLAUDE.md like every other session does.
 
-### 8. Report
+### 8. Set up the repo's Current work pointer
+
+The map says what the codebase *is*. Nothing yet says what is being *built*, so
+a fresh session knows the architecture and not the work. Close that here — it is
+the step that otherwise gets done by hand and then forgotten.
+
+If the repo's `CLAUDE.md` already has a `## Current work` heading, read it, say
+whether it still looks accurate, and move on.
+
+Otherwise ask the user two things — do not guess either:
+
+- What is the current effort, in one sentence?
+- Where is the authoritative plan? A GitHub issue or epic, a project board, a
+  milestone. **Point at a tracker, never at a document.** Documents go stale
+  silently, and a superseded spec is worse than no spec.
+
+Then add this near the TOP of the repo's `CLAUDE.md`, above the architecture
+detail, because it is orienting context:
+
+```markdown
+## Current work
+
+Active effort: <one sentence>.
+The authoritative plan is <tracker reference> — read it before planning anything.
+
+At the start of a session, run `<list command, e.g. gh issue list --state open>`
+and ask me which item we are working on. Do not infer it from the branch or from
+recent commits.
+```
+
+If the user names any superseded or retired document during this exchange, add a
+line marking it explicitly:
+
+```markdown
+<path> is SUPERSEDED — <why>. Never read it as a source of truth.
+```
+
+This is a **tracked** file. Stage it and tell the user it needs committing;
+never commit it yourself, and never write it without their answers.
+
+### 9. Report
 
 A few lines: tracked file count, graph node/edge count, the top three hub
-modules, where the two files landed, and anything under "Open questions" worth
-resolving before planning work starts.
+modules, where the files landed, whether `CLAUDE.md` was changed and needs a
+commit, and anything under "Open questions" worth resolving before planning
+starts.
 
 ## Verification
 
-Confirm all four before finishing:
+Confirm all five before finishing:
 
-1. `git status --porcelain` shows no new tracked files — the repo is untouched.
+1. `git status --porcelain` shows no untracked or modified files **other than**
+   the `CLAUDE.md` edit from step 8. The generated artifacts must not appear.
 2. `.claude/codebase-map.md` exists, and every command under "How to run it"
    appears verbatim in the project's scripts.
 3. The graph resolved real symbols: pick a top hub (or a component the user
    named) and confirm `graphify query "<name>" --graph graphify-out/graph.json`
    returns it with a real `src=` path.
 4. `~/.claude/CLAUDE.md` contains exactly one `## Codebase context` section.
+5. The repo's `CLAUDE.md` contains exactly one `## Current work` section, it
+   points at a tracker rather than a file, and it is staged but not committed.
 
-If (1) fails, move the offending file and re-run. Never leave generated files
-staged in a shared repo.
+If (1) shows a generated artifact, move it and re-run the gitignore step. Never
+leave generated files staged in a shared repo.
