@@ -1,5 +1,8 @@
 <!-- claude-context-kit seed rules.
-     Append to ~/.claude/CLAUDE.md with:  ./install.sh --seed
+     Merge into ~/.claude/CLAUDE.md with:  ./install.sh --seed
+     Each "- " bullet is one rule; only bullets are merged, and a rule is
+     matched by its content, not by this heading. Rules the target already
+     has, verbatim or reworded, are reported and left alone.
      These are project-agnostic. Nothing here names a language, company, or repo. -->
 
 ## Working rules
