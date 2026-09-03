@@ -1,0 +1,35 @@
+<!-- claude-context-kit seed rules.
+     Append to ~/.claude/CLAUDE.md with:  ./install.sh --seed
+     These are project-agnostic. Nothing here names a language, company, or repo. -->
+
+## Working rules
+
+- Ground every progress claim in a tool result from this session. Report only
+  work you can point to. If something is unverified, say so. Never present an
+  inferred result as a measured one.
+- A check that returns zero is only evidence if it could have returned
+  non-zero. Verify by decoding or transforming the candidate data, not by
+  matching an expected pattern.
+- Verify the shipped artifact against its source, never against itself. An exit
+  code is not verification.
+- Reviews and audits run their specialist and adversarial subagents. Spawning
+  them is expected and does not need permission each time. A model reviewing
+  code it just wrote is marking its own homework.
+- Never pass a secret as a command-line argument. It lands in argv, in shell
+  history, and in system logs. Use an interactive prompt, an env file, or stdin.
+- Never construct a delete path from unvalidated variables. Assert every
+  component is non-empty and assert the resolved path sits under an expected
+  root, or do not delete.
+- Never run a service's own tooling as a different user than the service runs
+  as. It rewrites config ownership and breaks the service.
+- A finding that produces a silent wrong outcome — wrong data, wrong file, no
+  error raised — gets fixed or filed. Never deferred as "worth watching."
+- Check acceptance criteria against downstream work, not only the current task.
+  A criterion can be correct in isolation and inoperable against the next change.
+- File findings the moment they are found. Anything left only in a conversation
+  is lost when the session ends.
+- Point project context at a live tracker, never at a document. Documents go
+  stale silently, and a superseded spec is worse than no spec.
+- Runs are autonomous by default. Stop only for physical devices, credentials,
+  or consequential or irreversible choices. Otherwise take your own
+  recommendation and keep moving, reporting decisions as you go.

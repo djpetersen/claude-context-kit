@@ -4,6 +4,8 @@
 #   ./install.sh            symlink (default) — `git pull` then updates them in place
 #   ./install.sh --copy     copy instead of symlinking
 #   ./install.sh --force    replace anything already installed under the same name
+#   ./install.sh --seed     also append the project-agnostic working rules from
+#                           global-CLAUDE.md.seed to ~/.claude/CLAUDE.md
 #
 # Env: CLAUDE_SKILLS_DIR overrides the install location (default ~/.claude/skills).
 set -euo pipefail
@@ -12,11 +14,13 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/skills"
 DEST="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 MODE=symlink
 FORCE=0
+SEED=0
 
 for arg in "$@"; do
   case "$arg" in
     --copy)   MODE=copy ;;
     --force)  FORCE=1 ;;
+    --seed)   SEED=1 ;;
     -h|--help) sed -n '2,8p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "install.sh: unknown option '$arg' (try --help)" >&2; exit 2 ;;
   esac
@@ -59,4 +63,24 @@ if (( installed )); then
   echo "Restart Claude Code, then try /prime-codebase or /promote-learnings."
 else
   echo "Nothing installed. Use --force to replace existing entries."
+fi
+
+if [ "$SEED" = 1 ]; then
+  SEED_SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/global-CLAUDE.md.seed"
+  DEST_MD="$HOME/.claude/CLAUDE.md"
+  if [ ! -f "$SEED_SRC" ]; then
+    echo "install.sh: global-CLAUDE.md.seed not found" >&2; exit 1
+  elif grep -q '^## Working rules' "$DEST_MD" 2>/dev/null; then
+    echo
+    echo "Seed skipped: $DEST_MD already has a '## Working rules' section."
+    echo "Merge by hand if you want the newer wording; see $SEED_SRC"
+  else
+    mkdir -p "$HOME/.claude"
+    [ -f "$DEST_MD" ] && cp "$DEST_MD" "$DEST_MD.bak.$(date +%Y%m%d%H%M%S)"
+    printf '\n' >> "$DEST_MD"
+    sed '/^<!--/,/-->$/d' "$SEED_SRC" >> "$DEST_MD"
+    echo
+    echo "Seeded working rules into $DEST_MD (backup alongside it)."
+    echo "These load in every project. Read them once and prune anything you disagree with."
+  fi
 fi
