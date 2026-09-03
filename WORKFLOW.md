@@ -41,6 +41,7 @@ have produced, so it is skipped.
 
 | Step | When |
 | --- | --- |
+| `./install.sh --seed` | Once per machine. Merges the seed working rules into `~/.claude/CLAUDE.md`. Re-run after the seed gains rules; reworded rules are reported, not rewritten. |
 | `/prime-codebase` | Once per repo, only when the repo exceeds what fits in context. Re-run after structural change. |
 | `/promote-learnings` | End of a project. Moves portable lessons into `~/.claude/CLAUDE.md`. |
 
